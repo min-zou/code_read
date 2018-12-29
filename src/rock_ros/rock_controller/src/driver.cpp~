@@ -1,0 +1,79 @@
+#include "driver.h"
+
+
+rock_driver::rock_driver()
+	: _isConnected(false)
+{
+    rock_serial *drv =new rock_serial(); 
+}
+
+rock_driver::~rock_driver(rock_serial *drv)
+{
+    disconnect();
+    delete drv;
+}
+
+int32_t rock_driver::connect(const char * port_path, uint32_t baudrate, uint32_t flag = 0)
+{
+    if (isConnected()) return 0;
+    if (!drv) return -1;
+    if (!drv->bind(port_path, baudrate)  ||  !drv->open()) {
+        return -1;
+    }
+    drv->flush(0);
+    _isConnected = true;
+    return 0;
+}
+
+void rock_driver::disconnect()
+{
+    if (!_isConnected) return ;
+    drv->close();
+
+}
+
+bool rock_driver::isConnected()
+{
+    return _isConnected;
+
+}
+
+int32_t rock_driver::sendcmd(int16_t left, int16_t right)
+{
+    uint8_t sendbuffer[9];
+    left = left&0xffff;
+    right = right&0xffff;	
+    if(!_isConnected) return -1;
+    sendbuffer[0] = 0xff;
+    sendbuffer[1] = 0xff;
+    sendbuffer[2] = 0xfd;
+    sendbuffer[3] = 0x06;
+    sendbuffer[4] = 0x01;
+    sendbuffer[5] = left%256;
+    sendbuffer[6] = left>>8;
+    sendbuffer[7] = right%256;
+    sendbuffer[8] = right>>8;
+    sendbuffer[9] = 255 - ((sendbuffer[2] + sendbuffer[3] + sendbuffer[4] + sendbuffer[5] + sendbuffer[6] + sendbuffer[7] + sendbuffer[8]))%256;
+    drv->senddata(sendbuffer,10);
+    return 0;
+}
+
+int32_t rock_driver::getenc(int32_t *encbuffer)
+{
+    uint8_t recvbuffer[13];
+    if(!_isConnected) return -1;
+    drv->recvdata(recvbuffer,14);
+    if(checksum(recvbuffer)==recvbuffer[13])
+    {
+	*encbuffer =( recvbuffer[5] | (recvbuffer[6] << 8) | (recvbuffer[7] << 16) | (recvbuffer[8] << 24) ) & 0xffffffff;
+        *(encbuffer+1) = ( recvbuffer[9] | (recvbuffer[10] << 8) | (recvbuffer[11] << 16) | (recvbuffer[12] << 24) ) & 0xffffffff;
+        return 0;
+    }
+    return -1;
+}
+
+
+uint8_t rock_driver::checksum(uint8_t *buffer)
+{
+    return  (255 - ((buffer[2] + buffer[3] + buffer[4] + buffer[5] + buffer[6] + buffer[7] + buffer[8] + buffer[9] + buffer[10] + buffer[11] + buffer[12]))%256);
+}

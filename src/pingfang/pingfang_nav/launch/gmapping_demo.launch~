@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!--- Run gmapping -->
+  <include file="$(find pingfang_nav)/launch/gmapping.launch" />
+
+  <!--- Run Move Base -->
+  <include file="$(find pingfang_nav)/launch/move_base.launch" />
+
+</launch>

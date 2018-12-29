@@ -1,0 +1,34 @@
+<launch>
+  <include file="$(find pf_description)/launch/description.launch" />
+  
+  <node pkg="pingfang_base" type="pingfang_node" name="pingfang_node">
+    <rosparam>
+      # TODO: Specify these in code rather than here.
+      require:
+        publishers:
+          - feedback
+          - imu/data_raw
+          - imu/mag
+        subscribers:
+          - cmd_drive
+    </rosparam>
+  </node>
+  <!-- Filter raw gyro data into a usable IMU message -->
+  <node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter">
+    <rosparam file="$(env PINGFANG_MAG_CONFIG)" />
+    <rosparam>
+      gain: 0.1
+      zeta: 0.001
+      publish_tf: false
+    </rosparam>
+  </node> 
+
+  <!-- Differential controller and basic localization -->
+  <include file="$(find pingfang_control)/launch/control.launch" />
+
+  <!-- Teleoperation via key and rviz interactive markers -->
+  <!--<include file="$(find pingfang_control)/launch/teleop.launch" /> -->
+
+ <!-- <include file ="$(find rplidar_ros)/launch/scan2scan.launch"/> -->
+
+</launch>

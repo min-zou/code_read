@@ -1,0 +1,8 @@
+<launch>
+  <node name="rock_imu_driver"          pkg="rock_imu"  type="GY_85_imu.py">
+  <param name="base_frame_id"         type="string" value="base_link"/>  
+  <param name="imu_frame_id"     type="string"    value="imu_link"/>
+  <param name="rate"            type="int" value="50"/>
+  </node>
+</launch>
+

@@ -1,0 +1,17 @@
+#include "rock_serial.h"
+
+class rock_driver
+{
+    public:
+	rock_driver();
+	~rock_driver(rock_serial *drv);
+	int32_t connect(const char * port_path, uint32_t baudrate, uint32_t flag = 0);
+	void disconnect();
+	bool isConnected();
+	int32_t sendcmd(int16_t left, int16_t right);
+	int32_t getenc(int32_t *encbuffer);
+        uint8_t checksum(uint8_t *buffer);
+
+	bool _isConnected;
+
+};

@@ -1,0 +1,41 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(pingfang_base)
+
+find_package(catkin REQUIRED COMPONENTS controller_manager hardware_interface pingfang_msgs roslaunch roslint  roscpp sensor_msgs)
+find_package(Boost REQUIRED COMPONENTS chrono)
+
+catkin_package(
+    INCLUDE_DIRS include
+    CATKIN_DEPENDS hardware_interface pingfang_msgs roscpp sensor_msgs
+    DEPENDS Boost
+)
+catkin_add_env_hooks(50.pingfang_find_mag_config
+  SHELLS sh DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/env-hooks)
+
+
+include_directories(include ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+
+add_executable(pingfang_node
+  src/pingfang_base.cpp
+  src/pingfang_hardware.cpp)
+target_link_libraries(pingfang_node ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_dependencies(pingfang_node pingfang_msgs_gencpp)
+
+roslint_cpp(
+  src/pingfang_base.cpp
+  src/pingfang_hardware.cpp
+  include/pingfang_base/pingfang_hardware.h
+  )
+
+roslaunch_add_file_check(launch)
+
+install(TARGETS pingfang_node
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
+install(DIRECTORY launch config
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

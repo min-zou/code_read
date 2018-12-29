@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package>
+  <name>pingfang_bringup</name>
+  <version>0.3.3</version>
+  <description>bringup for pingfang.</description>
+
+  <maintainer email="devin91@126.com">devin</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend version_gte="0.3">pingfang_base</run_depend>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>rosconsole</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>rock_controller</build_depend>
+  <build_depend>rock_imu</build_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>rosconsole</run_depend>
+  <run_depend>rock_controller</run_depend>
+  <run_depend>ock_imu</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>actionlib</run_depend>
+  <run_depend>pyRock</run_depend>
+
+  <export>
+  </export>
+</package>

@@ -1,0 +1,168 @@
+#include "rock_rxtx.h"
+#include "rock_driver_serial.h"
+#include <stdio.h>
+
+rock_driver * rock_driver::CreateDriver(uint32_t drivertype)
+{
+    switch (drivertype){
+    case DRIVER_TYPE_SERIALPORT:
+         return new rock_driver_serialimpl();
+    default:
+         return NULL;
+    }
+}
+
+void rock_driver::DisposeDriver(rock_driver * drv)
+{
+    delete drv;
+}
+
+rock_driver_serialimpl::rock_driver_serialimpl()
+    : _isConnected(false)
+{
+    _rxtx = rock_rxtx::CreateRxTx();
+}
+
+rock_driver_serialimpl::~rock_driver_serialimpl()
+{
+    disconnect();
+    rock_rxtx::ReleaseRxTx(_rxtx);
+}
+
+
+int32_t rock_driver_serialimpl::connect(const char * port_path, uint32_t baudrate, uint32_t flag)
+{
+    if (isConnected()) return 0;
+    if (!_rxtx) return -1;
+    if (!_rxtx->bind(port_path, baudrate)  ||  !_rxtx->open()) {
+        fprintf(stderr,"Error, cannot open to the specified serial port.\n");
+        return -1;
+    }
+    _rxtx->flush(0);
+    _isConnected = true;
+    return 0;
+}
+
+void rock_driver_serialimpl::disconnect()
+{
+    if (!_isConnected) return ;
+    _rxtx->close();
+
+}
+
+bool rock_driver_serialimpl::isConnected()
+{
+    return _isConnected;
+
+}
+
+int32_t rock_driver_serialimpl::sendcmd(int16_t left, int16_t right)
+{
+    uint8_t sendbuffer[10];
+    left = left&0xffff;
+    right = right&0xffff;	
+    if(!_isConnected) return -1;
+    sendbuffer[0] = 0xff;
+    sendbuffer[1] = 0xff;
+    sendbuffer[2] = 0xfd;
+    sendbuffer[3] = 0x06;
+    sendbuffer[4] = 0x01;
+    sendbuffer[5] = left%256;
+    sendbuffer[6] = left>>8;
+    sendbuffer[7] = right%256;
+    sendbuffer[8] = right>>8;
+    sendbuffer[9] = 255 - ((sendbuffer[2] + sendbuffer[3] + sendbuffer[4] + sendbuffer[5] + sendbuffer[6] + sendbuffer[7] + sendbuffer[8]))%256;
+    _rxtx->senddata(sendbuffer,10);
+    return 0;
+}
+
+int32_t rock_driver_serialimpl::sendstop()
+{
+    uint8_t sendbuffer[10];
+    if(!_isConnected) return -1;
+    sendbuffer[0] = 0xff;
+    sendbuffer[1] = 0xff;
+    sendbuffer[2] = 0xfd;
+    sendbuffer[3] = 0x06;
+    sendbuffer[4] = 0x02;
+    sendbuffer[5] = 0x00;
+    sendbuffer[6] = 0x00;
+    sendbuffer[7] = 0x00;
+    sendbuffer[8] = 0x00;
+    sendbuffer[9] = 0xfa;
+    _rxtx->senddata(sendbuffer,10);
+    return 0;
+}
+
+int32_t rock_driver_serialimpl::start()
+{
+    uint8_t sendbuffer[10];
+    if(!_isConnected) return -1;
+    sendbuffer[0] = 0xff;
+    sendbuffer[1] = 0xff;
+    sendbuffer[2] = 0xfd;
+    sendbuffer[3] = 0x06;
+    sendbuffer[4] = 0x03;
+    sendbuffer[5] = 0x00;
+    sendbuffer[6] = 0x00;
+    sendbuffer[7] = 0x00;
+    sendbuffer[8] = 0x00;
+    sendbuffer[9] = 0xf9;
+    _rxtx->senddata(sendbuffer,10);
+    return 0;
+}
+
+
+int32_t rock_driver_serialimpl::getenc(int32_t *encbuffer,uint32_t timeout)
+{
+    uint8_t recvbuffer[14];
+    int i=0;
+    if(!_isConnected) {
+        fprintf(stderr,"Error, serial port is not connected.\n");
+        return -1;
+    }
+    if(_rxtx->waitfordata(14,timeout) != rock_rxtx::ANS_OK)
+    {
+        return -1;
+    }
+    _rxtx->recvdata(recvbuffer,14);
+    if(checksum(recvbuffer)==recvbuffer[13])
+    {
+	*encbuffer =( recvbuffer[5] | (recvbuffer[6] << 8) | (recvbuffer[7] << 16) | (recvbuffer[8] << 24) ) & 0xffffffff;
+        *(encbuffer+1) = ( recvbuffer[9] | (recvbuffer[10] << 8) | (recvbuffer[11] << 16) | (recvbuffer[12] << 24) ) & 0xffffffff;
+        return 0;
+    }else 
+    {
+        for(i=0;i<14;i++) 
+        {
+	    fprintf(stderr,"recvbuffer[%d] is %d\n",i,recvbuffer[i]); 
+        }
+        fprintf(stderr,"Error, checksum is error,the right checksum is %d\n",checksum(recvbuffer));
+        return -1;
+    }
+}
+
+int32_t rock_driver_serialimpl::setpid(uint8_t kp, uint8_t ki, uint8_t kd)
+{
+    uint8_t sendbuffer[10];
+    if(!_isConnected) return -1;
+    sendbuffer[0] = 0xff;
+    sendbuffer[1] = 0xff;
+    sendbuffer[2] = 0xfd;
+    sendbuffer[3] = 0x06;
+    sendbuffer[4] = 0x04;
+    sendbuffer[5] = kp;
+    sendbuffer[6] = ki;
+    sendbuffer[7] = kd;
+    sendbuffer[8] = 0x00;
+    sendbuffer[9] = 255 - ((sendbuffer[2] + sendbuffer[3] + sendbuffer[4] + sendbuffer[5] + sendbuffer[6] + sendbuffer[7] + sendbuffer[8]))%256;
+    _rxtx->senddata(sendbuffer,10);
+    return 0;
+}
+
+
+
+uint8_t rock_driver_serialimpl::checksum(uint8_t *buffer)
+{
+    return  (255 - ((buffer[2] + buffer[3] + buffer[4] + buffer[5] + buffer[6] + buffer[7] + buffer[8] + buffer[9] + buffer[10] + buffer[11] + buffer[12]))%256);
+}

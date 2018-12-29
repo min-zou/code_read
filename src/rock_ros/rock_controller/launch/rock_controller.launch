@@ -1,0 +1,8 @@
+<launch>
+  <node name="rock_driver_node"          pkg="rock_controller"  type="rock_driver_node" output="screen">
+  <param name="serial_port"         type="string" value="/dev/ttyUSB0"/>  
+  <param name="serial_baudrate"     type="int"    value="115200"/>
+  <param name="rate"            type="int" value="50"/>
+  <param name="ticks_round"            type="int"   value="5200"/>
+  </node>
+</launch>

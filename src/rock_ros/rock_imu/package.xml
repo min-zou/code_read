@@ -1,0 +1,23 @@
+<package>
+  <name>rock_imu</name>
+  <version>0.10.0</version>
+  <description>
+    imu driver for rock
+  </description>
+  <author>devin</author>
+  <maintainer email="devin91@126.com">devin</maintainer>
+  <license>BSD</license>
+
+  
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>tf</run_depend>
+
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>actionlib</run_depend>
+  <run_depend>pyRock</run_depend>
+</package>

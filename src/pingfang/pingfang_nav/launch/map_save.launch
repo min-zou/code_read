@@ -1,0 +1,7 @@
+<launch>
+
+  <node pkg="map_server" type="map_saver" name="map_save"  args="-f ">
+
+  </node>
+
+</launch>

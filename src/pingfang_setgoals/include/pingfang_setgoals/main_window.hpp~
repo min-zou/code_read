@@ -1,0 +1,70 @@
+/**
+ * @file /include/pingfang_setgoals/main_window.hpp
+ *
+ * @brief Qt based gui for pingfang_setgoals.
+ *
+ * @date November 2010
+ **/
+#ifndef pingfang_setgoals_MAIN_WINDOW_H
+#define pingfang_setgoals_MAIN_WINDOW_H
+
+/*****************************************************************************
+** Includes
+*****************************************************************************/
+
+#include <QtGui/QMainWindow>
+#include "ui_main_window.h"
+#include "qnode.hpp"
+
+/*****************************************************************************
+** Namespace
+*****************************************************************************/
+
+namespace pingfang_setgoals {
+
+/*****************************************************************************
+** Interface [MainWindow]
+*****************************************************************************/
+/**
+ * @brief Qt central, all operations relating to the view part here.
+ */
+class MainWindow : public QMainWindow {
+Q_OBJECT
+
+public:
+	MainWindow(int argc, char** argv, QWidget *parent = 0);
+	~MainWindow();
+
+
+	void closeEvent(QCloseEvent *event); // Overloaded function
+	void showNoMasterMessage();
+	void initSetting();
+	void remove(int count);
+	
+
+public Q_SLOTS:
+	void on_addPosBtn_clicked();
+	void on_runBtn_clicked();
+	void on_deleteGoalsBtn_clicked();
+	void isSucceed(bool isSucceeded);
+	void timesChanged(QString count);
+	void rateChanged(QString rate);
+Q_SIGNALS:
+	void sendGoals(double px,double py,double pz ,double ox,double oy,double oz,double ow,double rate);
+
+private:
+	Ui::MainWindowDesign ui;
+	QString master_url;
+	QString host_url;
+	double value[20][7];
+	double goals[7];
+	int amount;
+	int goalsNum;
+	int times;
+	double loop_rate;
+	QNode qnode;
+};
+
+}  // namespace pingfang_setgoals
+
+#endif // pingfang_setgoals_MAIN_WINDOW_H

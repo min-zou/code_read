@@ -1,0 +1,56 @@
+#include "pingfang_base/pingfang_hardware.h"
+#include "controller_manager/controller_manager.h"
+#include "ros/callback_queue.h"
+
+#include <boost/chrono.hpp>
+
+typedef boost::chrono::steady_clock time_source;
+
+void controlLoop(pingfang_base::PingfangHardware &pingfang,
+                 controller_manager::ControllerManager &cm,
+                 time_source::time_point &last_time)
+{
+  time_source::time_point this_time = time_source::now();
+  boost::chrono::duration<double> elapsed_duration = this_time - last_time;
+  ros::Duration elapsed(elapsed_duration.count());
+  last_time = this_time;
+
+  pingfang.copyJointsFromHardware();
+  cm.update(ros::Time::now(), elapsed);
+  pingfang.publishDriveFromController();
+
+}
+
+
+int main(int argc, char *argv[])
+{
+  ros::init(argc, argv, "pingfang_node");
+  ros::NodeHandle nh, private_nh("~");
+
+  double control_frequency;
+  private_nh.param<double>("control_frequency", control_frequency, 10.0);
+  
+  // Initialize robot hardware and link to controller manager
+  pingfang_base::PingfangHardware pingfang;
+  controller_manager::ControllerManager cm(&pingfang, nh);
+
+
+  ros::CallbackQueue pingfang_queue;
+  ros::AsyncSpinner pingfang_spinner(1, &pingfang_queue);
+
+  time_source::time_point last_time = time_source::now();
+
+  ros::TimerOptions control_timer(
+      ros::Duration(1 / control_frequency),
+      boost::bind(controlLoop, boost::ref(pingfang), boost::ref(cm), boost::ref(last_time)),
+      &pingfang_queue);
+  ros::Timer control_loop = nh.createTimer(control_timer);
+
+  pingfang_spinner.start();
+
+  // Process remainder of ROS callbacks separately, mainly ControlManager related
+  ros::spin();
+
+  return 0;
+}
+

@@ -1,0 +1,18 @@
+<package>
+  <name>rock_controller</name>
+  <version>0.10.0</version>
+  <description>rock controller for pingfang</description>
+  <author>devin</author>
+  <maintainer email="devin91@126.com">devin</maintainer>
+  <license>BSD</license>
+
+  
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rosconsole</build_depend>
+  <build_depend>pingfang_msgs</build_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>rosconsole</run_depend>
+  <run_depend>pingfang_msgs</run_depend>
+
+</package>

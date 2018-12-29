@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!--- Run gmapping -->
+  <include file="$(find pingfang_nav)/launch/gmapping.launch" />
+
+  <!--- Run Move Base -->
+  <include file="$(find pingfang_nav)/launch/move_base.launch" />
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find pingfang_nav)/gmapping.rviz" />
+
+</launch>
